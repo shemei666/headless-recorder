@@ -14,6 +14,7 @@
     "@tailwindcss/postcss7-compat": "2.0.2",
     "@vueuse/core": "4.0.8",
     "autoprefixer": "9",
+    "aws-sdk": "2.1205.0",
     "core-js": "3.6.5",
     "css-selector-generator": "3.0.1",
     "lodash": "4.17.21",

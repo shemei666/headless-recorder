@@ -23,6 +23,7 @@ pnpm-debug.log*
 *.sw?
 
 # Vue Browser Extension Output
+*.crx
 *.pem
 *.pub
 *.zip

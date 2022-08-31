@@ -11,6 +11,7 @@ export const popupActions = {
   CLEAN_UP: 'CLEAN_UP',
   PAUSE: 'PAUSE',
   UN_PAUSE: 'UN_PAUSE',
+  PAGEMETADATA: 'PAGEMETADATA',
 }
 
 export const isDarkMode = () =>

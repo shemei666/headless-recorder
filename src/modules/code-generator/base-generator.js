@@ -1,5 +1,6 @@
 import Block from '@/modules/code-generator/block'
 import { headlessActions, eventsToRecord } from '@/modules/code-generator/constants'
+import { overlayActions } from '../overlay/constants'
 
 export const defaults = {
   wrapAsync: false,
@@ -20,6 +21,7 @@ export default class BaseGenerator {
     this._frameId = 0
     this._allFrames = {}
     this._screenshotCounter = 0
+    this.substituteRef = {}
 
     this._hasNavigation = false
   }
@@ -42,6 +44,59 @@ export default class BaseGenerator {
     let result = ''
 
     if (!events) return result
+    console.log('generator', events)
+    let pageMetaData = null
+    let elementMetaData = {}
+
+    let functionName = ''
+    let isRootPage = true
+    for (let i = 0; i < events.length; i++) {
+      const { action, value } = events[i]
+      console.log('action', action, value)
+      if (action === headlessActions.PAGEMETADATA) {
+        console.log('message', events[i])
+        const {
+          title,
+          subtitle,
+          category,
+          subcategory,
+          purpose,
+          description,
+          iconurl,
+          tags,
+        } = value
+
+        pageMetaData = {
+          title: title,
+          subTitle: subtitle,
+          category: category,
+          subCategory: subcategory,
+          purpose: purpose,
+          description: description,
+          iconURL: iconurl,
+          tags: tags,
+        }
+        functionName = `${title}${subtitle}${category}${subcategory}`.replace(/[^a-zA-Z0-9]/g, '')
+      } else if (action === headlessActions.ELEMENTMETADATA) {
+        const { selector, label, slug, type, subtype, tags, pagetitle, attributes } = events[i]
+        const escapedSelector = selector ? selector?.replace(/\\/g, '\\\\') : selector
+        elementMetaData[`${slug}${type}`] = {
+          label: label,
+          slug: slug,
+          type: type,
+          subType: subtype,
+          tags: tags,
+          pageTitle: pagetitle,
+          attributes: attributes,
+          Query: escapedSelector,
+        }
+        this.substituteRef[escapedSelector] = `ElementsMetaData["${slug}${type}"].Query`
+      }
+    }
+    result += `\nexport default function ${functionName}(input,callback){\n`
+    this._blocks.push(this._handleElementMetaData(elementMetaData))
+    this._blocks.push(this._handlePageMetaData(pageMetaData))
+    this._blocks.push(this._beforeGeneratedCode())
 
     for (let i = 0; i < events.length; i++) {
       const { action, selector, value, href, keyCode, tagName, frameId, frameUrl } = events[i]
@@ -49,7 +104,6 @@ export default class BaseGenerator {
 
       // we need to keep a handle on what frames events originate from
       this._setFrames(frameId, frameUrl)
-
       switch (action) {
         case 'keydown':
           if (keyCode === this._options.keyCode) {
@@ -64,8 +118,14 @@ export default class BaseGenerator {
             this._blocks.push(this._handleChange(escapedSelector, value))
           }
           break
+        case headlessActions.PAGEMETADATA:
+          break
         case headlessActions.GOTO:
           this._blocks.push(this._handleGoto(href, frameId))
+          if (isRootPage) {
+            this._blocks.push(this._rootPageData())
+            isRootPage = false
+          }
           break
         case headlessActions.VIEWPORT:
           this._blocks.push(this._handleViewport(value.width, value.height))
@@ -88,6 +148,7 @@ export default class BaseGenerator {
       this._blocks.unshift(block)
     }
 
+    this._blocks.push(this._afterGeneratedCode())
     this._postProcess()
 
     const indent = this._options.wrapAsync ? '  ' : ''
@@ -99,7 +160,7 @@ export default class BaseGenerator {
         result += indent + line.value + newLine
       }
     }
-
+    // console.log(result)
     return result
   }
 
@@ -124,12 +185,85 @@ export default class BaseGenerator {
       this._postProcessAddBlankLines()
     }
   }
+  _handleElementMetaData(metadata) {
+    const block = new Block(this._frameId)
+    block.addLine({
+      type: overlayActions.ELEMENTMETADATA,
+      value: `let ElementsMetaData = ${JSON.stringify(metadata)}`,
+    })
+    return block
+  }
+
+  _handlePageMetaData(metadata) {
+    const block = new Block(this._frameId)
+    block.addLine({
+      type: overlayActions.PAGEMETADATA,
+      value: `let ScriptMetaData = ${JSON.stringify(metadata)}`,
+    })
+    return block
+  }
+
+  _rootPageData() {
+    const block = new Block(this.frameId)
+    block.addLine({
+      type: null,
+      value: 'let pageSource = await page.evaluate(() => document.body.innerHTML)',
+    })
+    block.addLine({
+      type: null,
+      value: 'let pageData = URIencode(pageSource)',
+    })
+    return block
+  }
+  _beforeGeneratedCode() {
+    const block = new Block(this.frameId)
+    block.addLine({
+      type: null,
+      value:
+        'if(input.return==="meta") return {\n"elements": ElementsMetaData,\n"script": ScriptMetaData\n}',
+    })
+    block.addLine({
+      type: null,
+      value: 'let startTime = Date.now()',
+    })
+    return block
+  }
+
+  _afterGeneratedCode() {
+    const block = new Block(this.frameId)
+    block.addLine({
+      type: null,
+      value: 'let endTime = Date.now()\nlet timeElapse = endTime-startTime',
+    })
+    block.addLine({
+      type: null,
+      value: 'const {totalJSHeapSize,usedJSHeapSize,jsHeapSizeLimit} = window.performance.memory',
+    })
+    block.addLine({
+      type: null,
+      value: `callback({
+  "status": "done",
+  "data": pageData,
+  "elements": ElementsMetaData,
+  "script": ScriptMetaData,
+  "report":{startTime,endTime,timeElapse}
+  "memory":{totalJSHeapSize,usedJSHeapSize,jsHeapSizeLimit}
+  })
+}`,
+    })
+    return block
+  }
 
   _handleKeyDown(selector, value) {
     const block = new Block(this._frameId)
     block.addLine({
       type: eventsToRecord.KEYDOWN,
-      value: `await ${this._frame}.type('${selector}', '${this._escapeUserInput(value)}')`,
+      value:
+        this.substituteRef[selector] !== undefined
+          ? `await ${this._frame}.type(${this.substituteRef[selector]}, '${this._escapeUserInput(
+              value
+            )}')`
+          : `await ${this._frame}.type('${selector}', '${this._escapeUserInput(value)}')`,
     })
     return block
   }
@@ -139,12 +273,18 @@ export default class BaseGenerator {
     if (this._options.waitForSelectorOnClick) {
       block.addLine({
         type: eventsToRecord.CLICK,
-        value: `await ${this._frame}.waitForSelector('${selector}')`,
+        value:
+          this.substituteRef[selector] !== undefined
+            ? `await ${this._frame}.waitForSelector(${this.substituteRef[selector]})`
+            : `await ${this._frame}.waitForSelector('${selector}')`,
       })
     }
     block.addLine({
       type: eventsToRecord.CLICK,
-      value: `await ${this._frame}.click('${selector}')`,
+      value:
+        this.substituteRef[selector] !== undefined
+          ? `await ${this._frame}.click(${this.substituteRef[selector]})`
+          : `await ${this._frame}.click('${selector}')`,
     })
     return block
   }
@@ -152,7 +292,10 @@ export default class BaseGenerator {
   _handleChange(selector, value) {
     return new Block(this._frameId, {
       type: eventsToRecord.CHANGE,
-      value: `await ${this._frame}.select('${selector}', '${value}')`,
+      value:
+        this.substituteRef[selector] !== undefined
+          ? `await ${this._frame}.select(${this.substituteRef[selector]}, '${value}')`
+          : `await ${this._frame}.select('${selector}', '${value}')`,
     })
   }
 

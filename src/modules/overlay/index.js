@@ -3,6 +3,7 @@ import { createApp } from 'vue'
 import getSelector from '@/services/selector'
 import SelectorApp from '@/modules/overlay/Selector.vue'
 import OverlayApp from '@/modules/overlay/Overlay.vue'
+import LabelFormApp from '@/modules/overlay/LabelForm.vue'
 import { overlaySelectors } from '@/modules/overlay/constants'
 
 export default class Overlay {
@@ -33,6 +34,10 @@ export default class Overlay {
     this.selectorContainer.id = overlaySelectors.SELECTOR_ID
     document.body.appendChild(this.selectorContainer)
 
+    this.labelFormContainer = document.createElement('div')
+    this.labelFormContainer.id = overlaySelectors.LABELFORM_ID
+    document.body.appendChild(this.labelFormContainer)
+
     if (clear) {
       this.store.commit('clear')
     }
@@ -48,11 +53,22 @@ export default class Overlay {
       .use(this.store)
       .mount('#' + overlaySelectors.OVERLAY_ID)
 
+    this.labelFormApp = createApp(LabelFormApp)
+      .use(this.store)
+      .mount('#' + overlaySelectors.LABELFORM_ID)
+
     this.mouseOverEvent = e => {
       const selector = getSelector(e, { dataAttribute: this.store.state.dataAttribute })
-      this.overlayApp.currentSelector = selector.includes('#' + overlaySelectors.OVERLAY_ID)
-        ? ''
-        : selector
+      this.overlayApp.currentSelector =
+        selector.includes('#' + overlaySelectors.OVERLAY_ID) ||
+        selector.includes('#' + overlaySelectors.LABELFORM_ID)
+          ? ''
+          : selector
+      this.labelFormApp.currentSelector =
+        selector.includes('#' + overlaySelectors.OVERLAY_ID) ||
+        selector.includes('#' + overlaySelectors.LABELFORM_ID)
+          ? ''
+          : selector
 
       if (
         this.overlayApp.currentSelector &&
@@ -80,11 +96,14 @@ export default class Overlay {
 
     document.body.removeChild(this.overlayContainer)
     document.body.removeChild(this.selectorContainer)
+    document.body.removeChild(this.labelFormContainer)
 
     this.overlayContainer = null
     this.overlayApp = null
     this.selectorContainer = null
     this.selectorApp = null
+    this.labelFormContainer = null
+    this.labelFormApp = null
 
     window.document.removeEventListener('mouseover', this.mouseOverEvent)
     window.removeEventListener('scroll', this.scrollEvent, false)

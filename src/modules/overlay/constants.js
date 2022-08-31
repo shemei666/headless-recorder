@@ -1,6 +1,7 @@
 export const overlaySelectors = {
   OVERLAY_ID: 'headless-recorder-overlay',
   SELECTOR_ID: 'headless-recorder-selector',
+  LABELFORM_ID: 'headless-recorder-labelform',
   CURRENT_SELECTOR_CLASS: 'headless-recorder-selected-element',
   CURSOR_CAMERA_CLASS: 'headless-recorder-camera-cursor',
   FLASH_CLASS: 'headless-recorder-flash',

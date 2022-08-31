@@ -59,6 +59,7 @@ export default class Recorder {
   }
 
   _recordEvent(e) {
+    console.log('event:', e)
     if (this._previousEvent && this._previousEvent.timeStamp === e.timeStamp) {
       return
     }

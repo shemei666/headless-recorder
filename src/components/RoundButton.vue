@@ -28,4 +28,8 @@ export default {
   height: 72px;
   width: 72px;
 }
+button {
+  margin: 0;
+  padding: 0;
+}
 </style>

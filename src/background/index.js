@@ -151,7 +151,9 @@ class Background {
   // }
 
   handleMessage(msg, sender) {
+    console.log(msg)
     if (msg.control) {
+      console.log('control')
       return this.handleRecordingMessage(msg, sender)
     }
 
@@ -259,6 +261,9 @@ class Background {
       this.start()
     }
 
+    if (msg.action === popupActions.PAGEMETADATA) {
+      this._recording.push(msg)
+    }
     if (msg.action === popupActions.STOP) {
       browser.sendTabMessage({ action: popupActions.STOP })
       this.stop()

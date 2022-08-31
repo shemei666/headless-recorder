@@ -105,6 +105,75 @@
           Data is never, ever shared with 3rd parties.
         </p>
       </section>
+      <section>
+        <h2 class="">AWS Keys</h2>
+        <form class="w-full max-w-md">
+          <div class="md:flex md:items-center mb-6">
+            <div class="md:w-1/2">
+              <label class="aws block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4">
+                AWS_ACCESS_KEY_ID
+              </label>
+            </div>
+            <div class="md:w-auto">
+              <input
+                v-model="options.keyid"
+                class="aws bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-blue"
+              />
+            </div>
+          </div>
+          <div class="md:flex md:items-center mb-6">
+            <div class="md:w-1/2">
+              <label class="aws block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4">
+                AWS_SECRET_ACCESS_KEY
+              </label>
+            </div>
+            <div class="md:w-auto">
+              <input
+                v-model="options.secret"
+                class="aws bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-blue"
+              />
+            </div>
+          </div>
+          <div class="md:flex md:items-center mb-6">
+            <div class="md:w-1/2">
+              <label class="aws block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4">
+                BUCKET NAME
+              </label>
+            </div>
+            <div class="md:w-auto">
+              <input
+                v-model="options.bucketname"
+                class="aws bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-blue"
+              />
+            </div>
+          </div>
+          <div class="md:flex md:items-center mb-6">
+            <div class="md:w-1/2">
+              <label class="aws block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4">
+                BUCKET REGION
+              </label>
+            </div>
+            <div class="md:w-auto">
+              <input
+                v-model="options.bucketregion"
+                class="aws bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-blue"
+              />
+            </div>
+          </div>
+
+          <div class="awsave">
+            <div>
+              <button
+                class="shadow bg-blue hover:bg-blue focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded"
+                type="button"
+                @click="updatekeys"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
     </div>
   </main>
 </template>
@@ -182,6 +251,9 @@ export default {
 
       this.loading = false
     },
+    updatekeys() {
+      this.save()
+    },
 
     listenForKeyCodePress() {
       this.recordingKeyCodePress = true
@@ -226,7 +298,7 @@ h2 {
   @apply text-gray-darkish text-xl font-semibold mb-5 dark:text-gray-light;
 }
 
-label {
+label:not(.aws) {
   color: #000;
   @apply font-semibold text-sm mb-2 block dark:text-gray-lightest;
 }
@@ -237,5 +309,9 @@ section {
 
 p {
   @apply text-gray-darkish text-xs mb-2 dark:text-white;
+}
+.awsave {
+  display: flex;
+  justify-content: center;
 }
 </style>
