@@ -49,7 +49,7 @@
         Run on Checkly
       </Button>
       <Button
-        v-show="code"
+        v-show="code && !noAWScreds"
         :disabled="isUploading || noAWScreds || uploadDone"
         class="mr-1"
         @click="upload"
@@ -377,8 +377,5 @@ button:focus-visible {
 
 button:focus {
   outline: 0;
-}
-h1 {
-  font-size: 3rem;
 }
 </style>

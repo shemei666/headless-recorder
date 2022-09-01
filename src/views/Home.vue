@@ -165,7 +165,7 @@
           m-0
           focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
         />
-        <label class="form-label inline-block mb-2 text-gray-700">Sub-Title:</label>
+        <label class="form-label inline-block mb-2 text-gray-700">Tags:</label>
         <input
           v-model="tags"
           class="

@@ -44,7 +44,6 @@ export default class BaseGenerator {
     let result = ''
 
     if (!events) return result
-    console.log('generator', events)
     let pageMetaData = null
     let elementMetaData = {}
 
@@ -52,9 +51,7 @@ export default class BaseGenerator {
     let isRootPage = true
     for (let i = 0; i < events.length; i++) {
       const { action, value } = events[i]
-      console.log('action', action, value)
       if (action === headlessActions.PAGEMETADATA) {
-        console.log('message', events[i])
         const {
           title,
           subtitle,
@@ -160,7 +157,6 @@ export default class BaseGenerator {
         result += indent + line.value + newLine
       }
     }
-    // console.log(result)
     return result
   }
 

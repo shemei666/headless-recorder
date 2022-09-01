@@ -1,141 +1,28 @@
 <template>
-  <div
-    v-if="show"
-    class="block p-6 rounded-lg shadow-lg bg-grey max-w-sm"
-    id="headless-recorder-labelform"
-  >
+  <div v-if="show" class="form-style-2" id="headless-recorder-labelform">
     <form>
-      <div class="form-group mb-6">
-        <label class="form-label inline-block mb-2 text-gray-700">Label:</label>
-        <input
-          v-model="label"
-          class="form-control
-        block
-        w-full
-        px-3
-        py-1.5
-        text-base
-        font-normal
-        text-gray-700
-        bg-white bg-clip-padding
-        border border-solid border-gray-300
-        rounded
-        transition
-        ease-in-out
-        m-0
-        focus:text-gray-700 focus:bg-white focus:border-blue focus:outline-none"
-        />
-        <label class="form-label inline-block mb-2 text-gray-700">Slug:</label>
-        <input
-          v-model="slug"
-          class="form-control block
-        w-full
-        px-3
-        py-1.5
-        text-base
-        font-normal
-        text-gray-700
-        bg-white bg-clip-padding
-        border border-solid border-gray-300
-        rounded
-        transition
-        ease-in-out
-        m-0
-        focus:text-gray-700 focus:bg-white focus:border-blue focus:outline-none"
-        />
-        <label class="form-label inline-block mb-2 text-gray-700">Type:</label>
-        <select
-          v-model="type"
-          class="
-          form-select appearance-none
-          block
-          w-full
-          px-3
-          py-1.5
-          text-base
-          font-normal
-          text-gray-700
-          bg-white bg-clip-padding bg-no-repeat
-          border border-solid border-gray-300
-          rounded
-          transition
-          ease-in-out
-          m-0
-          focus:text-gray-700 focus:bg-white focus:border-blue focus:outline-none"
-        >
-          <option disabled value="">Please select</option>
-          <option>Link</option>
-          <option>Input</option>
-          <option>Button</option>
-          <option>Textarea</option>
-          <option>Select</option>
-          <option>Text</option>
-        </select>
-        <label class="form-label inline-block mb-2 text-gray-700">Sub-Type:</label>
-        <select
-          v-model="subtype"
-          class="
-          form-select appearance-none
-          block
-          w-full
-          px-3
-          py-1.5
-          text-base
-          font-normal
-          text-gray-700
-          bg-white bg-clip-padding bg-no-repeat
-          border border-solid border-gray-300
-          rounded
-          transition
-          ease-in-out
-          m-0
-          focus:text-gray-700 focus:bg-white focus:border-blue focus:outline-none"
-        >
-          <option disabled value="">Please select</option>
-          <option v-for="sub of subtypes" :key="sub">{{ sub }}</option>
-        </select>
-        <label class="form-label inline-block mb-2 text-gray-700">Tags:</label>
-        <input
-          v-model="tags"
-          class="form-control block
-        w-full
-        px-3
-        py-1.5
-        text-base
-        font-normal
-        text-gray-700
-        bg-white bg-clip-padding
-        border border-solid border-gray-300
-        rounded
-        transition
-        ease-in-out
-        m-0
-        focus:text-gray-700 focus:bg-white focus:border-blue focus:outline-none"
-        />
-        <button
-          @click="sendElementMetaData"
-          type="button"
-          class="
-              px-6
-              py-2.5
-              bg-blue
-              text-white
-              font-medium
-              text-xs
-              leading-tight
-              uppercase
-              rounded
-              shadow-md
-              hover:bg-blue hover:shadow-lg
-              focus:bg-blue focus:shadow-lg focus:outline-none focus:ring-0
-              active:bg-blue active:shadow-lg
-              transition
-              duration-150
-              ease-in-out"
-        >
-          Submit
-        </button>
-      </div>
+      <label><span>Label:</span></label>
+      <input v-model="label" class="input-field" />
+      <label><span>Slug:</span></label>
+      <input v-model="slug" class="input-field" />
+      <label><span>Type:</span></label>
+      <select v-model="type" class="select-field">
+        <option disabled value="">Please select</option>
+        <option>Link</option>
+        <option>Input</option>
+        <option>Button</option>
+        <option>Textarea</option>
+        <option>Select</option>
+        <option>Text</option>
+      </select>
+      <label><span>Sub-Type:</span></label>
+      <select v-model="subtype" class="select-field">
+        <option disabled value="">Please select</option>
+        <option v-for="sub of subtypes" :key="sub">{{ sub }}</option>
+      </select>
+      <label class><span>Tags:</span></label>
+      <input v-model="tags" class="input-field" />
+      <button @click="sendElementMetaData" type="button">Submit</button>
     </form>
   </div>
 </template>
@@ -143,14 +30,13 @@
 <script>
 import { headlessActions } from '@/modules/code-generator/constants'
 import storage from '@/services/storage'
-
-import '../../assets/tailwind.css'
+import { mapState } from 'vuex'
 
 export default {
   name: 'LabelForm',
   data() {
     return {
-      show: false,
+      show: true,
       selected: null,
       type: '',
       subtype: '',
@@ -180,11 +66,23 @@ export default {
       ],
     }
   },
-  mounted() {
+  computed: {
+    ...mapState([
+      'isPaused',
+      'isStopped',
+      'screenshotMode',
+      'darkMode',
+      'hasRecorded',
+      'isCopying',
+      'recording',
+    ]),
+  },
+  async mounted() {
     window.addEventListener('click', this.triggerFormPopup)
-    const { selected, showLabelForm } = storage.get(['selected', 'showLabelForm'])
+    const { selected, showLabelForm } = await storage.get(['selected', 'showLabelForm'])
     this.selected = selected
-    this.show = showLabelForm
+    this.show = this.isPaused ? showLabelForm : false
+    console.log('console:....', this.selected, this.show)
   },
   methods: {
     sendElementMetaData() {
@@ -210,6 +108,7 @@ export default {
       storage.set({ showLabelForm: this.show })
     },
     triggerFormPopup() {
+      if (this.isPaused) return
       if (this.currentSelector) {
         this.label = ''
         this.slug = ''
@@ -236,7 +135,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 #headless-recorder-labelform {
   /* border: 1px solid;
   border-color: grey;
@@ -250,7 +149,82 @@ export default {
   /* padding: 5px; */
   /* display: none; */
 }
-button {
-  margin-top: 5px;
+.form-style-2 {
+  max-width: 500px;
+  padding: 20px 12px 10px 20px;
+  font: 13px Arial, Helvetica, sans-serif;
+}
+.form-style-2-heading {
+  font-weight: bold;
+  font-style: italic;
+  border-bottom: 2px solid #ddd;
+  margin-bottom: 20px;
+  font-size: 15px;
+  padding-bottom: 3px;
+}
+.form-style-2 label {
+  display: block;
+  margin: 0px 0px 15px 0px;
+}
+.form-style-2 label > span {
+  width: 100px;
+  font-weight: bold;
+  float: left;
+  padding-top: 8px;
+  padding-right: 5px;
+}
+.form-style-2 span.required {
+  color: red;
+}
+.form-style-2 .tel-number-field {
+  width: 40px;
+  text-align: center;
+}
+.form-style-2 input.input-field,
+.form-style-2 .select-field {
+  width: 48%;
+}
+.form-style-2 input.input-field,
+.form-style-2 .tel-number-field,
+.form-style-2 .textarea-field,
+.form-style-2 .select-field {
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  border: 1px solid #c2c2c2;
+  box-shadow: 1px 1px 4px #ebebeb;
+  -moz-box-shadow: 1px 1px 4px #ebebeb;
+  -webkit-box-shadow: 1px 1px 4px #ebebeb;
+  border-radius: 3px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  padding: 7px;
+  outline: none;
+}
+.form-style-2 .input-field:focus,
+.form-style-2 .tel-number-field:focus,
+.form-style-2 .textarea-field:focus,
+.form-style-2 .select-field:focus {
+  border: 1px solid #1e88e5;
+}
+.form-style-2 .textarea-field {
+  height: 100px;
+  width: 55%;
+}
+.form-style-2 button {
+  border: none;
+  padding: 8px 15px 8px 15px;
+  background: #1e88e5;
+  color: #fff;
+  box-shadow: 1px 1px 4px #dadada;
+  -moz-box-shadow: 1px 1px 4px #dadada;
+  -webkit-box-shadow: 1px 1px 4px #dadada;
+  border-radius: 3px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+}
+.form-style-2 button:hover {
+  background: #1976d2;
+  color: #fff;
 }
 </style>
