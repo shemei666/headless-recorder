@@ -228,7 +228,7 @@ export default {
       })
       this.options.currentfilename =
         `${this.$refs.home.title || ''}${this.$refs.home.subtitle || ''}${this.$refs.home
-          .category || ''}${this.$refs.home.subcategory || ''}`.replace(/[^a-bA-B0-9]/g, '') ||
+          .category || ''}${this.$refs.home.subcategory || ''}`.replace(/[^a-zA-z0-9]/g, '') ||
         `${Date.now()}`
       storage.set({ options: this.options })
     },
