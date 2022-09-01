@@ -160,6 +160,17 @@ export default {
       if (this.isRecording) {
         this.stop()
       } else {
+        if (
+          !(
+            this.$refs.home.title &&
+            this.$refs.home.subtitle &&
+            this.$refs.home.category &&
+            this.$refs.home.subcategory
+          )
+        ) {
+          alert('Title,SubTitle,Category&Subcategory is needed!')
+          return
+        }
         close && window.close()
         this.start()
       }
@@ -199,17 +210,6 @@ export default {
     },
 
     start() {
-      if (
-        !(
-          this.$refs.home.title &&
-          this.$refs.home.subtitle &&
-          this.$refs.home.category &&
-          this.$refs.home.subcategory
-        )
-      ) {
-        alert('Title,SubTitle,Category&Subcategory is needed!')
-        return
-      }
       analytics.trackEvent({ options: this.options, event: 'Start' })
       this.cleanUp()
       bus.postMessage({ action: popupActions.START })
